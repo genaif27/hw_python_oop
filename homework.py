@@ -1,23 +1,24 @@
-from __future__ import annotations
+from dataclasses import dataclass, asdict
+from typing import Dict, Type
 
 
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
 
-    def __init__(self, training_type, duration,
-                 distance, speed, calories) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    calories: float
+    speed: float
+    distance: float
+    duration: float
+
+    MESSAGE = (f'Тип тренировки:{__name__}; ',
+               f'Длительность: {duration:.3f} ч.; ',
+               f'Дистанция: {distance:.3f} км; ',
+               f'Ср. скорость: {speed:.3f} км/ч; ',
+               f'Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type}; '
-                f'Длительность: {self.duration:.3f} ч.; '
-                f'Дистанция: {self.distance:.3f} км; '
-                f'Ср. скорость: {self.speed:.3f} км/ч; '
-                f'Потрачено ккал: {self.calories:.3f}.')
+        return self.MESSAGE.format(**asdict(self))
 
 
 class Training:
@@ -40,10 +41,10 @@ class Training:
         return self.get_distance() / self.duration
 
     def get_spent_calories(self) -> float:
-        pass
+        NotImplementedError
 
     def show_training_info(self) -> InfoMessage:
-        return InfoMessage(self.__class__.__name__,
+        return InfoMessage(type(self).__name__,
                            self.duration,
                            self.get_distance(),
                            self.get_mean_speed(),
@@ -51,29 +52,23 @@ class Training:
 
 
 class Running(Training):
+    """Тренировка: бег."""
     COEFF_CALORIE_1: int = 18
     COEFF_CALORIE_2: int = 20
     MIN_IN_H: int = 60
-    training_type: str = 'Бег'
-
-    def __init__(self,
-                 action: int,
-                 duration: float,
-                 weight: float) -> None:
-        super().__init__(action, duration, weight)
 
     def get_spent_calories(self) -> float:
-        return (self.COEFF_CALORIE_1 * self.get_mean_speed()
-                - self.COEFF_CALORIE_2) * self.weight / self.M_IN_KM\
-            * self.duration * self.MIN_IN_H
-
-        """Тренировка: бег."""
+        return ((self.COEFF_CALORIE_1 * self.get_mean_speed()
+                - self.COEFF_CALORIE_2) * self.weight / (self.M_IN_KM
+                * self.duration * self.MIN_IN_H))
 
 
 class SportsWalking(Training):
+    """Тренировка: спортивная ходьба."""
     COEFF_WALKING_1: float = 0.035
     COEFF_WALKING_2: float = 0.029
-    training_type: str = 'Ходьба'
+    COEFF_WALKING_3: float = 2
+    MIN_IN_H: int = 60
 
     def __init__(self,
                  action: int,
@@ -84,12 +79,10 @@ class SportsWalking(Training):
         self.height = height
 
     def get_spent_calories(self) -> float:
-        return (self.COEFF_WALKING_1 * self.weight + (
-                self.get_mean_speed() ** 2 // self.height)
-                * self.COEFF_WALKING_2 * self.weight) * (self.duration * 60)
-
-
-'Тренировка: спортивная ходьба.'
+        return ((self.COEFF_WALKING_1 * self.weight
+                + self.get_mean_speed() * self.COEFF_WALKING_3 / self.height
+                * self.COEFF_WALKING_2 * self.weight)
+                * self.duration * self.MIN_IN_H)
 
 
 class Swimming(Training):
@@ -97,7 +90,7 @@ class Swimming(Training):
 
     LEN_STEP: float = 1.38
     SWIM_CAL_COEF_1: float = 1.1
-    SWIM_COEF: int = 2
+    SWIM_COEF: float = 2
 
     def __init__(self,
                  action: int,
@@ -119,12 +112,14 @@ class Swimming(Training):
 
 
 def read_package(
-    workout_type: str,
+    workout_type: Type[str],
     data: list,
 ) -> Training:
+
     """Прочитать данные полученные от датчиков."""
 
-    workout_type_classes = {
+    workout_type_classes = Dict[str, str]
+    {
         'SWM': Swimming,
         'RUN': Running,
         'WLK': SportsWalking,
@@ -151,5 +146,5 @@ if __name__ == '__main__':
     ]
 
     for workout_type, data in packages:
-        trainingObject = read_package(workout_type, data)
-        main(trainingObject)
+        training_object = read_package(workout_type, data)
+        main(training_object)
