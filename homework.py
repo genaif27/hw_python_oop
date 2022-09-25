@@ -5,17 +5,17 @@ from typing import Dict, Type
 @dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-
+    training_type: str
     calories: float
     speed: float
     distance: float
     duration: float
 
-    MESSAGE = (f'Тип тренировки:{__name__}; ',
-               f'Длительность: {duration:.3f} ч.; ',
-               f'Дистанция: {distance:.3f} км; ',
-               f'Ср. скорость: {speed:.3f} км/ч; ',
-               f'Потрачено ккал: {calories:.3f}.')
+    MESSAGE = ('Тип тренировки: {training_type}; '
+               'Длительность: {duration:.3f} ч.; '
+               'Дистанция: {distance:.3f} км; '
+               'Ср. скорость: {speed:.3f} км/ч; '
+               'Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
         return self.MESSAGE.format(**asdict(self))
@@ -23,6 +23,7 @@ class InfoMessage:
 
 class Training:
     """Базовый класс тренировки."""
+    training_type: str
     LEN_STEP: float = 0.65
     M_IN_KM: int = 1000
 
@@ -118,8 +119,7 @@ def read_package(
 
     """Прочитать данные полученные от датчиков."""
 
-    workout_type_classes = Dict[str, str]
-    {
+    workout_type_classes: Dict[str, str] = {
         'SWM': Swimming,
         'RUN': Running,
         'WLK': SportsWalking,
