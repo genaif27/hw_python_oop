@@ -6,10 +6,10 @@ from typing import Dict, Type
 class InfoMessage:
     """Информационное сообщение о тренировке."""
     training_type: str
-    calories: float
-    speed: float
-    distance: float
     duration: float
+    distance: float
+    speed: float
+    calories: float
 
     MESSAGE = ('Тип тренировки: {training_type}; '
                'Длительность: {duration:.3f} ч.; '
@@ -60,8 +60,8 @@ class Running(Training):
 
     def get_spent_calories(self) -> float:
         return ((self.COEFF_CALORIE_1 * self.get_mean_speed()
-                - self.COEFF_CALORIE_2) * self.weight / (self.M_IN_KM
-                * self.duration * self.MIN_IN_H))
+                - self.COEFF_CALORIE_2) * self.weight / self.M_IN_KM
+                * self.duration * self.MIN_IN_H)
 
 
 class SportsWalking(Training):
@@ -81,7 +81,7 @@ class SportsWalking(Training):
 
     def get_spent_calories(self) -> float:
         return ((self.COEFF_WALKING_1 * self.weight
-                + self.get_mean_speed() * self.COEFF_WALKING_3 / self.height
+                + (self.get_mean_speed() * self.COEFF_WALKING_3 // self.height)
                 * self.COEFF_WALKING_2 * self.weight)
                 * self.duration * self.MIN_IN_H)
 
